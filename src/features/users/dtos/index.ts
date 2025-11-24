@@ -1,1 +1,2 @@
-// export * from './get-all-users.dto.tsTODO';
+export * from './get-all.dto';
+export * from './create.dto';

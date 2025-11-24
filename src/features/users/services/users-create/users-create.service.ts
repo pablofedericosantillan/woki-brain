@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable } from '@nestjs/common';
-import { UsersRepository } from './users.repository';
+import { UsersRepository } from '../../users.repository';
 
 @Injectable()
-export class UserService {
+export class UserCreateService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
-  async create(params: any): Promise<string> {
+  async create(params: any): Promise<{ id: string }> {
     const result = await this.usersRepository.create(params);
 
-    return result._id;
+    return { id: result._id };
   }
 }

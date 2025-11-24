@@ -12,7 +12,7 @@ export class PaginationResult<T> {
   @IsInt()
   @Min(1)
   @Max(100)
-  limit: number = 5;
+  limit: number = 20;
 
   /**
    * The number of items skipped.
@@ -32,20 +32,3 @@ export class PaginationResult<T> {
   @IsOptional()
   totalCount?: number;
 }
-
-// export class PaginationParams extends PickType(PaginationResult, ['limit', 'offset'] as const) {
-//   /**
-//    * Whether to return the total number of items.
-//    *
-//    * Can be set to false to improve performance.
-//    * @example true
-//    */
-//   @Transform((transformObj) => {
-//     const { count } = transformObj.obj;
-//     if (count === 'true') return true;
-//     if (count === 'false') return false;
-//     return count;
-//   })
-//   @IsBoolean()
-//   count?: boolean = true;
-// }
