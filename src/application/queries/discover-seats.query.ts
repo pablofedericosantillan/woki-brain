@@ -53,7 +53,7 @@ export class DiscoverSeatsQueryHandler {
 
     const bookings = databaseRepository.getBookingsByDay(restaurantId, sectorId, date);
 
-    const normalizedDate = new TimeWindow(date, restaurant.timezone);
+    const timeWindow = new TimeWindow(date, restaurant.timezone);
     const wokiBrain = new WokiBrain(durationMinutes, partySize);
     const candidates = [];
 
@@ -61,10 +61,10 @@ export class DiscoverSeatsQueryHandler {
     let windowIsValid = false;
 
     for (const sw of rServiceWindows) {
-      const finalWindow = normalizedDate.validationWindow(
+      const finalWindow = timeWindow.validationWindow(
         sw,
         { start: windowStart, end: windowEnd }
-      )
+      );
 
       if (!finalWindow) continue;
       windowIsValid = true;
@@ -72,9 +72,9 @@ export class DiscoverSeatsQueryHandler {
       const gapsByTable = new Map<string, IGap[]>;
 
       for (const table of tables) {
-        const reservedTables = bookings.filter((b) => b.tableIds.includes(table.id));
+        const tableBookings = bookings.filter((b) => b.tableIds.includes(table.id));
 
-        if (!reservedTables.length) {
+        if (!tableBookings.length) {
           gapsByTable.set(table.id, 
             [{
               startMin: finalWindow.startMin,
@@ -84,11 +84,11 @@ export class DiscoverSeatsQueryHandler {
           continue;
         } 
 
-        const gap = new Gap(normalizedDate.timeISO(),finalWindow);
-        gapsByTable.set(table.id, gap.detect(reservedTables));        
+        const gap = new Gap(timeWindow.timeISO(),finalWindow);
+        gapsByTable.set(table.id, gap.detect(tableBookings));        
       }
 
-      candidates.push(...wokiBrain.generateCandidates(normalizedDate.timeISO(), tables, gapsByTable));
+      candidates.push(...wokiBrain.generateCandidates(timeWindow.timeISO(), tables, gapsByTable));
     }
 
     if (!windowIsValid) {

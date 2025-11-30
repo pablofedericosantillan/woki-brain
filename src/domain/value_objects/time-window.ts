@@ -36,10 +36,10 @@ export class TimeWindow {
     };
 
     const userWindow = {
-      start: userServiceWindows?.start // chequear no solamente la existencia sino si es mayor o menor al windows services del restaurante
+      start: userServiceWindows?.start
       ? this.parseHHmm(userServiceWindows.start)
       : null,
-      end:  userServiceWindows?.end
+      end: userServiceWindows?.end
       ? this.parseHHmm(userServiceWindows.end)
       : null,
     };

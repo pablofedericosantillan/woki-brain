@@ -6,8 +6,8 @@ export enum BookingStatus {
 }
 
 export enum CandidateKind {
-  SINGLE = "single",
-  COMBO = "combo",
+  SINGLE = "SINGLE",
+  COMBO = "COMBO",
 }
 
 export interface Restaurant {
@@ -41,9 +41,9 @@ export interface Booking {
   id: string;
   restaurantId: string;
   sectorId: string;
-  tableIds: string[]; // single or combo
+  tableIds: string[];
   partySize: number;
-  start: ISODateTime; // [start, end)
+  start: ISODateTime;
   end: ISODateTime;
   durationMinutes: number;
   status: BookingStatus;

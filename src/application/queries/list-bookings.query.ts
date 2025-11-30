@@ -12,7 +12,7 @@ export class ListBookingsQuery {
 }
 
 export class ListBookingsQueryHandler {
-  execute(query: ListBookingsQuery): ListBookingsQueryHandlerResponse | InvalidResult{
+  execute(query: ListBookingsQuery): ListBookingsQueryHandlerResponse | InvalidResult {
     const { restaurantId, sectorId, date } = query;
 
     const logBase = {
@@ -34,7 +34,7 @@ export class ListBookingsQueryHandler {
   }
 
 
-  private validation(query: ListBookingsQuery): {ok: boolean} | InvalidResult {
+  private validation(query: ListBookingsQuery): { ok: boolean } | InvalidResult {
     const restaurant = databaseRepository.getRestaurantById(query.restaurantId);
     if (!restaurant)
       return { ok: false, status: 404, error: "not_found", detail: "Restaurant not found" };

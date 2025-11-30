@@ -11,7 +11,7 @@ const router = Router();
 router.get("/health", healthController);
 
 router.get("/woki/discover", discoverSeatsController);
-router.post("/woki/bookings", createBookingController);
 router.get("/woki/bookings/day", listBookingsController);
+router.post("/woki/bookings", createBookingController);
 
 export default router;

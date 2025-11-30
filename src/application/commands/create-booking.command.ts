@@ -9,7 +9,7 @@ import {
   databaseRepository
 } from "../../infrastructure";
 
-// const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+// TODO: test function const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export class CreateBookingCommand {
   constructor(
@@ -58,7 +58,7 @@ export class CreateBookingCommandHandler {
     
     const { restaurant, tables } = (valid as ValidResult).data;
 
-    const payloadHash = JSON.stringify(cmd.data)
+    const payloadHash = JSON.stringify(cmd.data);
     const idempotentBooking = idempotencyService.getIdempotentBooking(idempotencyKey, payloadHash);
 
     if (idempotentBooking) {
@@ -70,7 +70,7 @@ export class CreateBookingCommandHandler {
     }
 
     const bookings = databaseRepository.getBookingsByDay(restaurantId, sectorId, date);
-    const normalizedDate = new TimeWindow(date, restaurant.timezone);
+    const timeWindow = new TimeWindow(date, restaurant.timezone);
     const wokiBrain = new WokiBrain(durationMinutes, partySize);
 
     const candidates: Candidate[] = [];
@@ -79,10 +79,10 @@ export class CreateBookingCommandHandler {
     let windowIsValid = false;
 
     for (const sw of rServiceWindows) {
-      const finalWindow = normalizedDate.validationWindow(
+      const finalWindow = timeWindow.validationWindow(
         sw,
         { start: windowStart, end: windowEnd }
-      )
+      );
 
       if (!finalWindow) continue;
       windowIsValid = true;
@@ -90,9 +90,9 @@ export class CreateBookingCommandHandler {
       const gapsByTable = new Map<string, IGap[]>;
 
       for (const table of tables) {
-        const reservedTables = bookings.filter((b) => b.tableIds.includes(table.id));
+        const tableBookings = bookings.filter((b) => b.tableIds.includes(table.id));
 
-        if (!reservedTables.length) {
+        if (!tableBookings.length) {
           gapsByTable.set(table.id, 
             [{
               startMin: finalWindow.startMin,
@@ -102,11 +102,11 @@ export class CreateBookingCommandHandler {
           continue;
         } 
 
-        const gap = new Gap(normalizedDate.timeISO(),finalWindow);
-        gapsByTable.set(table.id, gap.detect(reservedTables));        
+        const gap = new Gap(timeWindow.timeISO(),finalWindow);
+        gapsByTable.set(table.id, gap.detect(tableBookings));        
       }
 
-      candidates.push(...wokiBrain.generateCandidates(normalizedDate.timeISO(), tables, gapsByTable));
+      candidates.push(...wokiBrain.generateCandidates(timeWindow.timeISO(), tables, gapsByTable));
     }
 
     if (!windowIsValid) {
@@ -149,7 +149,8 @@ export class CreateBookingCommandHandler {
 
     try {
       // TODO: check this
-      // const dayBookings = databaseRepository.getBookingsByDay(restaurantId, sectorId, date);
+      // const dayBookings = databaseRepository.getBookingsByDay(restaurantId, sectorId, date); 
+      // aca podemos agregar by table?
       // const startDt = DateTime.fromISO(bestCandidate.startISO);
       // const endDt = DateTime.fromISO(bestCandidate.endISO);
 

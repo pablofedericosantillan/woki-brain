@@ -1,9 +1,7 @@
 import request from "supertest";
 import app from "../src/app";
-import { string } from "zod";
 
 describe("POST /bookings", () => {
-  // Utilidad para request base
   const postBooking = (body: any, idempotencyKey: string) =>
     request(app)
       .post("/woki/bookings")
@@ -79,7 +77,7 @@ describe("POST /bookings", () => {
     const res = await postBooking(
       {
         ...basePayload,
-        windowStart: "07:00", // fuera de horario
+        windowStart: "07:00",
         windowEnd: "08:00",
       },
       "outside-1"

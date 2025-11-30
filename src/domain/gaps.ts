@@ -47,6 +47,6 @@ export class Gap {
           DateTime.fromISO(b.end).diff(this.baseDay, "minutes").minutes
         ),
       }))
-      .sort((a, b) => a.startMin - b.startMin);
+      .sort((itemA, itemB) => itemA.startMin - itemB.startMin);
   }
 }

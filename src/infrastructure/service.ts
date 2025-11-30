@@ -57,7 +57,6 @@ export class ConcurrencyLockService {
   }
 
   public acquireLock(key: string): boolean {
-    console.log(91, this.locks)
     if (this.locks.has(key)) return false;
     this.locks.add(key);
     return true;
@@ -70,5 +69,3 @@ export class ConcurrencyLockService {
 
 export const concurrencyLockService = new ConcurrencyLockService();
 export const idempotencyService = new IdempotencyService();
-
-

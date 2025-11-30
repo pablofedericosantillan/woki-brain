@@ -31,10 +31,10 @@ export class WokiBrain {
     }
 
     // 2-Combo tables: combination of two tables
-    const MAX_NEARBY_TABLES = 2; // have to be tables.length > MAX_NEARBY_TABLES
+    const MAX_NEARBY_TABLES = 2; // It has to be tables.length > MAX_NEARBY_TABLES to restrict the combos.
 
     for (let i = 0; i < tables.length; i++) {
-      for (let j  = i + 1; j <= ( i + MAX_NEARBY_TABLES); j++) {
+      for (let j  = i + 1; j <=( i + MAX_NEARBY_TABLES); j++) {
         if (j >= tables.length) break;
 
         const t1 = tables[i];
@@ -59,34 +59,28 @@ export class WokiBrain {
   }
 
   /**
-   * Select candidate by following criteria: add a env variable
-   *  1) SINGLE antes que COMBO
-   *  2) menor desperdicio de capacidad (capacityMax - partySize)
-   *  3) horario de inicio más temprano
-   *  4) orden estable por tableIds (determinismo)
+   * Selects the best candidate following a deterministic priority:
+   *
+   *  1) Prefer SINGLE candidates over COMBO candidates.
+   *  2) Prefer candidates with the least capacity waste (capacityMax - partySize).
+   *  3) Prefer the earliest available start time.
    */
-  // TODO: check selectBestCandidate
   public selectBestCandidate(candidates: Candidate[]): Candidate | null {
     if (!candidates.length) return null;
 
-    return [...candidates].sort((a, b) => {
-      // 1️⃣ Preferir single
+    return candidates.sort((a, b) => {
+      // Prefer single
       if (a.kind !== b.kind) {
         return a.kind === CandidateKind.SINGLE ? -1 : 1;
       }
 
-      // 2️⃣ Menor desperdicio
+      // Less capacity waste
       const wasteA = a.capacityMax - this.partySize;
       const wasteB = b.capacityMax - this.partySize;
       if (wasteA !== wasteB) return wasteA - wasteB;
 
-      // 3️⃣ Inicio más temprano
-      if (a.startISO !== b.startISO) {
+      // Default: Earliest start time
         return a.startISO.localeCompare(b.startISO);
-      }
-
-      // 4️⃣ Orden estable por IDs
-      return a.tableIds.join(",").localeCompare(b.tableIds.join(","));
     })[0];
   }
 
