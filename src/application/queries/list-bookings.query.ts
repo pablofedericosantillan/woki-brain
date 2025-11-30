@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { databaseRepository } from "../../infrastructure";
 import { InvalidResult, ListBookingsQueryHandlerResponse } from "../types";
-import { logger } from "../../infrastructure/logger";
+import { logger } from "../../shared/logger";
 
 export class ListBookingsQuery {
   constructor(

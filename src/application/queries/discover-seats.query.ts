@@ -4,7 +4,7 @@ import { IGap, SLOT_MINUTES } from "../../domain/types";
 import { Gap, TimeWindow } from "../../domain";
 import { databaseRepository } from "../../infrastructure";
 import { DiscoverSeatsQueryHandlerResponse, InvalidResult, ValidResult } from "../types";
-import { logger } from "../../infrastructure/logger";
+import { logger } from "../../shared/logger";
 
 export class DiscoverSeatsQuery {
   constructor(

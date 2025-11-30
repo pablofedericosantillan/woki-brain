@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { Booking, BookingStatus, Candidate, IGap, SLOT_MINUTES } from "../../domain/types";
 import { TimeWindow, WokiBrain, Gap } from "../../domain";
 import { CreateBookingCommandHandlerResponse, InvalidResult, ValidResult } from "../types";
-import { logger } from "../../infrastructure/logger";
+import { logger } from "../../shared/logger";
 import {
   concurrencyLockService,
   idempotencyService,

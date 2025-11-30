@@ -1,10 +1,10 @@
 import express from "express";
 import pinoHttp from "pino-http";
-import { logger } from "./infrastructure/logger";
+import { logger, swaggerSpec } from "./shared";
 import routes from "./routes";
+import swaggerUi from "swagger-ui-express";
 
 const app = express();
-
 app.use(express.json());
 
 app.use(
@@ -15,6 +15,8 @@ app.use(
     },
   })
 );
+
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(routes);
 

@@ -28,18 +28,18 @@ export const discoverSeatsQuerySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
       message: "date must follow format YYYY-MM-DD",
     }),
-  windowStart: z.string().regex(/^\d{2}:\d{2}$/, {
-      message: "windowStart must follow format HH:mm",
-    }),
-  windowEnd: z.string().regex(/^\d{2}:\d{2}$/, {
-      message: "windowEnd must follow format HH:mm",
-    }),
   durationMinutes: z.coerce.number()
     .int()
     .positive()
     .refine((v: number) => v % 15 === 0, {
       message: "Non-grid times/durations",
     }),
+  windowStart: z.string().regex(/^\d{2}:\d{2}$/, {
+      message: "windowStart must follow format HH:mm",
+    }).optional(),
+  windowEnd: z.string().regex(/^\d{2}:\d{2}$/, {
+      message: "windowEnd must follow format HH:mm",
+    }).optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
 });
 
