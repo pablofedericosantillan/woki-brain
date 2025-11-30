@@ -23,19 +23,6 @@ export class DiscoverSeatsQuery {
 
 export class DiscoverSeatsQueryHandler {
   execute(query: DiscoverSeatsQuery): DiscoverSeatsQueryHandlerResponse | InvalidResult {
-    const logBase = {
-      requestId: crypto.randomUUID(),
-      op: "discover-seats"
-    };
-
-    const valid = this.validation(query);
-        if (!valid.ok) {
-      logger.warn({...logBase, outcome: valid});
-      return valid as InvalidResult;
-    }
-
-    const { restaurant, tables } = (valid as ValidResult).data;
-
     const {
       restaurantId,
       sectorId,
@@ -47,6 +34,23 @@ export class DiscoverSeatsQueryHandler {
       limit = 10
     } = query.data;
 
+    const logBase = {
+      requestId: crypto.randomUUID(),
+      restaurantId,
+      sectorId,
+      partySize,
+      durationMinutes,
+      op: "discover-seats"
+    };
+
+    const valid = this.validation(query);
+        if (!valid.ok) {
+      logger.warn({...logBase, outcome: valid});
+      return valid as InvalidResult;
+    }
+
+    const { restaurant, tables } = (valid as ValidResult).data;
+
     const bookings = databaseRepository.getBookingsByDay(restaurantId, sectorId, date);
 
     const normalizedDate = new TimeWindow(date, restaurant.timezone);
@@ -54,6 +58,7 @@ export class DiscoverSeatsQueryHandler {
     const candidates = [];
 
     const rServiceWindows = restaurant.windows ?? [{ start: "00:00", end: "23:59" }];
+    let windowIsValid = false;
 
     for (const sw of rServiceWindows) {
       const finalWindow = normalizedDate.validationWindow(
@@ -62,6 +67,7 @@ export class DiscoverSeatsQueryHandler {
       )
 
       if (!finalWindow) continue;
+      windowIsValid = true;
 
       const gapsByTable = new Map<string, IGap[]>;
 
@@ -85,27 +91,29 @@ export class DiscoverSeatsQueryHandler {
       candidates.push(...wokiBrain.generateCandidates(normalizedDate.timeISO(), tables, gapsByTable));
     }
 
+    if (!windowIsValid) {
+      logger.info({ ...logBase, outcome: "outside_service_window" });
+      return {
+        ok: false,
+        status: 422,
+        error: "outside_service_window",
+        detail: "Window does not intersect service hours"
+      };
+    }
+
     if (!candidates.length) {
-      logger.info({
-        ...logBase,
-        outcome: "no_capacity",
-      });
-  
+      logger.info({ ...logBase, outcome: "no_capacity" });
       return {
         ok: false,
         status: 409,
         error: "no_capacity",
-        detail: "No room fits"
+        detail: "No single or combo gap fits duration within window"
       };
     }
 
-    const sortCandidates = [...candidates] // TODO revisar esto
-      .sort((a, b) =>
-        a.capacityMax !== b.capacityMax
-          ? a.capacityMax - b.capacityMax
-          : a.startISO.localeCompare(b.startISO)
-      )
-      .slice(0, limit);
+    const sortCandidates = candidates.sort((a, b) =>
+      a.startISO.localeCompare(b.startISO)
+    ).slice(0, limit);
 
     logger.info({...logBase, outcome: "success"});
     return {

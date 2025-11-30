@@ -13,8 +13,12 @@ export class ListBookingsQuery {
 
 export class ListBookingsQueryHandler {
   execute(query: ListBookingsQuery): ListBookingsQueryHandlerResponse | InvalidResult{
+    const { restaurantId, sectorId, date } = query;
+
     const logBase = {
       requestId: crypto.randomUUID(),
+      restaurantId,
+      sectorId,
       op: "list-bookings"
     };
 
@@ -23,8 +27,6 @@ export class ListBookingsQueryHandler {
       logger.warn({...logBase, outcome: valid});
       return valid as InvalidResult;
     }
-
-    const { restaurantId, sectorId, date } = query;
 
     const bookings = databaseRepository.getBookingsByDay(restaurantId, sectorId, date);
 

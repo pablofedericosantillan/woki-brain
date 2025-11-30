@@ -1,9 +1,15 @@
 import crypto from "crypto";
 import { Booking, BookingStatus, Candidate, IGap, SLOT_MINUTES } from "../../domain/types";
 import { TimeWindow, WokiBrain, Gap } from "../../domain";
-import { databaseRepository, concurrencyService } from "../../infrastructure";
 import { CreateBookingCommandHandlerResponse, InvalidResult, ValidResult } from "../types";
 import { logger } from "../../infrastructure/logger";
+import {
+  concurrencyLockService,
+  idempotencyService,
+  databaseRepository
+} from "../../infrastructure";
+
+// const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export class CreateBookingCommand {
   constructor(
@@ -22,19 +28,6 @@ export class CreateBookingCommand {
 
 export class CreateBookingCommandHandler {
   execute(cmd: CreateBookingCommand): CreateBookingCommandHandlerResponse | InvalidResult {
-    const logBase = {
-      requestId: crypto.randomUUID(),
-      op: "create-booking"
-    };
-
-    const valid = this.validation(cmd);
-    if (!valid.ok) {
-      logger.warn({...logBase, outcome: valid});
-      return valid as InvalidResult;
-    }
-    
-    const { restaurant, tables } = (valid as ValidResult).data;
-
     const {
       idempotencyKey,
       data: {
@@ -48,8 +41,25 @@ export class CreateBookingCommandHandler {
       },
     } = cmd;
 
+    const logBase = {
+      requestId: crypto.randomUUID(),
+      restaurantId,
+      sectorId,
+      partySize,
+      durationMinutes,
+      op: "create-booking"
+    };
+
+    const valid = this.validation(cmd);
+    if (!valid.ok) {
+      logger.warn({...logBase, outcome: valid});
+      return valid as InvalidResult;
+    }
+    
+    const { restaurant, tables } = (valid as ValidResult).data;
+
     const payloadHash = JSON.stringify(cmd.data)
-    const idempotentBooking = concurrencyService.getIdempotentBooking(idempotencyKey, payloadHash);
+    const idempotentBooking = idempotencyService.getIdempotentBooking(idempotencyKey, payloadHash);
 
     if (idempotentBooking) {
       logger.info({
@@ -66,6 +76,7 @@ export class CreateBookingCommandHandler {
     const candidates: Candidate[] = [];
 
     const rServiceWindows = restaurant.windows ?? [{ start: "00:00", end: "23:59" }];
+    let windowIsValid = false;
 
     for (const sw of rServiceWindows) {
       const finalWindow = normalizedDate.validationWindow(
@@ -74,6 +85,7 @@ export class CreateBookingCommandHandler {
       )
 
       if (!finalWindow) continue;
+      windowIsValid = true;
 
       const gapsByTable = new Map<string, IGap[]>;
 
@@ -97,38 +109,47 @@ export class CreateBookingCommandHandler {
       candidates.push(...wokiBrain.generateCandidates(normalizedDate.timeISO(), tables, gapsByTable));
     }
 
-    if (!candidates.length) {
-      logger.info({
-        ...logBase,
-        outcome: "no_capacity",
-      });
+    if (!windowIsValid) {
+      logger.info({ ...logBase, outcome: "outside_service_window" });
+      return {
+        ok: false,
+        status: 422,
+        error: "outside_service_window",
+        detail: "Window does not intersect service hours"
+      };
+    }
 
+    if (!candidates.length) {
+      logger.info({ ...logBase, outcome: "no_capacity" });
       return {
         ok: false,
         status: 409,
         error: "no_capacity",
-        detail: "No room fits"
+        detail: "No single or combo gap fits duration within window"
       };
     }
 
     const bestCandidate = wokiBrain.selectBestCandidate(candidates);
 
     if (!bestCandidate) {
-      return { ok: false, status: 409, error: "no_capacity", detail: "No available seats" };
+      logger.info({ ...logBase, outcome: "no_capacity" });
+      return { ok: false, status: 409, error: "no_capacity", detail: "No single or combo gap fits duration within window" };
     }
 
-    const lockKey = concurrencyService.buildLockKey(
+    const lockKey = concurrencyLockService.buildLockKey(
       restaurantId, sectorId, bestCandidate.tableIds, bestCandidate.startISO
     );
 
-    if (!concurrencyService.acquireLock(lockKey)) {
-      return { ok: false, status: 409, error: "no_capacity", detail: "Concurrent conflict" };
+    if (!concurrencyLockService.acquireLock(lockKey)) {
+      logger.info({ ...logBase, outcome: "concurrence-conflict" });
+      return { ok: false, status: 409, error: "no_capacity", detail: "Concurrence conflict" };
     }
 
-    try {
-      // const dayBookings = databaseRepository.getBookingsByDay(restaurantId, sectorId, date);
+    // await sleep(2000)
 
-      // // Última verificación de colisiones -> esto no dberia aparecer?
+    try {
+      // TODO: check this
+      // const dayBookings = databaseRepository.getBookingsByDay(restaurantId, sectorId, date);
       // const startDt = DateTime.fromISO(bestCandidate.startISO);
       // const endDt = DateTime.fromISO(bestCandidate.endISO);
 
@@ -159,13 +180,13 @@ export class CreateBookingCommandHandler {
       };
 
       databaseRepository.addBooking(booking);
-      concurrencyService.storeIdempotentBooking(idempotencyKey, payloadHash, booking);
+      idempotencyService.save(idempotencyKey, payloadHash, booking);
   
       logger.info({...logBase, outcome: "success"});
 
       return { ok: true, booking: booking };
     } finally {
-      concurrencyService.releaseLock(lockKey);
+      concurrencyLockService.releaseLock(lockKey);
     }
   }
 

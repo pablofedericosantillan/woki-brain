@@ -22,7 +22,7 @@ export class DatabaseRepository {
     sectorId: string,
     date: string
   ): Booking[] {
-    return db.bookings.filter(
+     const bookings = db.bookings.filter(
       (b) =>
         b.restaurantId === restaurantId &&
         b.sectorId === sectorId &&
@@ -30,6 +30,12 @@ export class DatabaseRepository {
         DateTime.fromISO(b.start).toISODate() === date &&
         !b.deletedAt
     );
+
+    const sortBookings = bookings.sort((a, b) =>
+      a.start.localeCompare(b.start)
+    );
+
+    return sortBookings;
   }
 
   public addBooking(booking: Booking): void {
