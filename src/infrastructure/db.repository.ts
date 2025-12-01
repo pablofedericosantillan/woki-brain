@@ -41,6 +41,14 @@ export class DatabaseRepository {
   public addBooking(booking: Booking): void {
     db.bookings.push(booking);
   }
+
+  public softDeleteBooking(bookingId: string): boolean {
+    const booking = db.bookings.find((b) => b.id === bookingId && !b.deletedAt);
+    if (!booking) return false;
+
+    booking.deletedAt = DateTime.utc().toISO();
+    return true;
+  }
 }
 
 export const databaseRepository = new DatabaseRepository();

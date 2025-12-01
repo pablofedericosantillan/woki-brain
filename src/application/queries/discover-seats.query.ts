@@ -92,7 +92,7 @@ export class DiscoverSeatsQueryHandler {
     }
 
     if (!windowIsValid) {
-      logger.info({ ...logBase, outcome: "outside_service_window" });
+      logger.warn({ ...logBase, outcome: "outside_service_window" });
       return {
         ok: false,
         status: 422,
@@ -102,7 +102,7 @@ export class DiscoverSeatsQueryHandler {
     }
 
     if (!candidates.length) {
-      logger.info({ ...logBase, outcome: "no_capacity" });
+      logger.warn({ ...logBase, outcome: "no_capacity" });
       return {
         ok: false,
         status: 409,

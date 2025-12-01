@@ -110,7 +110,7 @@ export class CreateBookingCommandHandler {
     }
 
     if (!windowIsValid) {
-      logger.info({ ...logBase, outcome: "outside_service_window" });
+      logger.warn({ ...logBase, outcome: "outside_service_window" });
       return {
         ok: false,
         status: 422,
@@ -120,7 +120,7 @@ export class CreateBookingCommandHandler {
     }
 
     if (!candidates.length) {
-      logger.info({ ...logBase, outcome: "no_capacity" });
+      logger.warn({ ...logBase, outcome: "no_capacity" });
       return {
         ok: false,
         status: 409,
@@ -132,7 +132,7 @@ export class CreateBookingCommandHandler {
     const bestCandidate = wokiBrain.selectBestCandidate(candidates);
 
     if (!bestCandidate) {
-      logger.info({ ...logBase, outcome: "no_capacity" });
+      logger.warn({ ...logBase, outcome: "no_capacity" });
       return { ok: false, status: 409, error: "no_capacity", detail: "No single or combo gap fits duration within window" };
     }
 
@@ -141,7 +141,7 @@ export class CreateBookingCommandHandler {
     );
 
     if (!concurrencyLockService.acquireLock(lockKey)) {
-      logger.info({ ...logBase, outcome: "concurrence-conflict" });
+      logger.warn({ ...logBase, outcome: "concurrence-conflict" });
       return { ok: false, status: 409, error: "no_capacity", detail: "Concurrence conflict" };
     }
 

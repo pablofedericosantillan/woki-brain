@@ -13,6 +13,7 @@ import {
   ListBookingsQuery,
   InvalidResult,
   CreateBookingCommandHandlerResponse,
+  DeleteBookingCommandHandler,
 } from "../application";
 
 export const listBookingsController = async (req: Request, res: Response) => {
@@ -78,4 +79,24 @@ export const createBookingController = async (req: Request, res: Response) => {
   const response = result as CreateBookingCommandHandlerResponse;
 
   return res.status(201).json(response.booking);
+};
+
+export const deleteBookingController = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ error: "invalid_input", detail: "bookingId is required" });
+  }
+
+  const handler = new DeleteBookingCommandHandler();
+  const result = handler.execute(id);
+
+  if (result && !result.ok) {
+    const err = result as InvalidResult;
+    return res.status(err.status).json({
+      error: err.error,
+      detail: err.detail,
+    });
+  }
+
+  return res.status(204).send();
 };

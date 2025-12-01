@@ -29,6 +29,7 @@
  *         description: Invalid input
  */
 
+
 /**
  * @openapi
  * /woki/bookings:
@@ -79,6 +80,7 @@
  *       409:
  *         description: Conflict / no capacity
  */
+
 
 /**
  * @openapi
@@ -135,4 +137,26 @@
  *         description: Seats available
  *       400:
  *         description: Invalid input
+ */
+
+
+/**
+ * @openapi
+ * /woki/bookings/{id}:
+ *   delete:
+ *     summary: Soft delete a booking
+ *     tags:
+ *       - Bookings
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the booking to delete
+ *     responses:
+ *       204:
+ *          description: ok
+ *       404:
+ *         description: Booking not found
  */

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { healthController } from "./controllers/health.controller";
 import {
     createBookingController,
+    deleteBookingController,
     discoverSeatsController,
     listBookingsController
 } from "./controllers/api.controller";
@@ -13,5 +14,6 @@ router.get("/health", healthController);
 router.get("/woki/discover", discoverSeatsController);
 router.get("/woki/bookings/day", listBookingsController);
 router.post("/woki/bookings", createBookingController);
+router.delete("/woki/bookings/:id", deleteBookingController);
 
 export default router;
