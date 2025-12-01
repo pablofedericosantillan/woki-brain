@@ -65,9 +65,7 @@ export class WokiBrain {
    *  2) Prefer candidates with the least capacity waste (capacityMax - partySize).
    *  3) Prefer the earliest available start time.
    */
-  public selectBestCandidate(candidates: Candidate[]): Candidate | null {
-    if (!candidates.length) return null;
-
+  public selectBestCandidate(candidates: Candidate[]): Candidate {
     return candidates.sort((a, b) => {
       // Prefer single
       if (a.kind !== b.kind) {

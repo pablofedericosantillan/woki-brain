@@ -11,22 +11,22 @@
  *         required: true
  *         schema:
  *           type: string
+ *           example: "R1"
  *       - in: query
  *         name: sectorId
  *         required: true
  *         schema:
  *           type: string
+ *           example: "S1"
  *       - in: query
  *         name: date
  *         required: true
  *         schema:
  *           type: string
- *           example: "2025-10-25"
+ *           example: "2025-10-22"
  *     responses:
  *       200:
  *         description: Successful response
- *       400:
- *         description: Invalid input
  */
 
 
@@ -43,7 +43,7 @@
  *         required: true
  *         schema:
  *           type: string
- *           example: "test-12"
+ *           example: "idempotency-key-test-123"
  *         description: Unique key to avoid duplicate bookings
  *     requestBody:
  *       required: true
@@ -60,7 +60,7 @@
  *                 example: "S1"
  *               partySize:
  *                 type: number
- *                 example: 10
+ *                 example: 7
  *               date:
  *                 type: string
  *                 format: date
@@ -76,9 +76,7 @@
  *                 example: 60
  *     responses:
  *       201:
- *         description: Booking created
- *       409:
- *         description: Conflict / no capacity
+ *         description: Successful response
  */
 
 
@@ -95,16 +93,19 @@
  *         required: true
  *         schema:
  *           type: string
+ *           example: "R1"
  *       - in: query
  *         name: sectorId
  *         required: true
  *         schema:
  *           type: string
+ *           example: "S1"
  *       - in: query
  *         name: partySize
  *         required: true
  *         schema:
  *           type: number
+ *           example: 5
  *       - in: query
  *         name: date
  *         required: true
@@ -116,16 +117,19 @@
  *         required: true
  *         schema:
  *           type: number
+ *           example: 90
  *       - in: query
  *         name: windowStart
  *         required: false
  *         schema:
  *           type: string
+ *           example: "20:00"
  *       - in: query
  *         name: windowEnd
  *         required: false
  *         schema:
  *           type: string
+ *           example: "23:00"
  *       - in: query
  *         name: limit
  *         required: false
@@ -134,9 +138,7 @@
  *           example: 10
  *     responses:
  *       200:
- *         description: Seats available
- *       400:
- *         description: Invalid input
+ *         description: Successful response
  */
 
 
@@ -153,10 +155,9 @@
  *         required: true
  *         schema:
  *           type: string
+ *           example: "BK_1"
  *         description: ID of the booking to delete
  *     responses:
  *       204:
- *          description: ok
- *       404:
- *         description: Booking not found
+ *          description: Successful response
  */

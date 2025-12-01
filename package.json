@@ -1,16 +1,15 @@
 {
   "name": "woki-brain",
   "version": "1.0.0",
-  "description": "A compact, Woki-branded challenge that discovers when and how to seat a party using single tables or table combinations.",
+  "description": "A booking engine that finds the best seating option for a party using single tables or table combinations.",
   "main": "dist/index.js",
   "engines": {
     "npm": ">=10.0.0",
     "node": ">=20.0.0"
   },
   "scripts": {
-    "dev": "nodemon --watch src --exec ts-node src/index.ts",
+    "start": "nodemon --watch src --exec ts-node src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
     "test": "jest --runInBand"
   },
   "keywords": [],

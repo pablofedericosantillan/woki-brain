@@ -9,7 +9,7 @@ import {
   databaseRepository
 } from "../../infrastructure";
 
-// TODO: test function const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+// test function -> const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 export class CreateBookingCommand {
   constructor(
@@ -131,11 +131,6 @@ export class CreateBookingCommandHandler {
 
     const bestCandidate = wokiBrain.selectBestCandidate(candidates);
 
-    if (!bestCandidate) {
-      logger.warn({ ...logBase, outcome: "no_capacity" });
-      return { ok: false, status: 409, error: "no_capacity", detail: "No single or combo gap fits duration within window" };
-    }
-
     const lockKey = concurrencyLockService.buildLockKey(
       restaurantId, sectorId, bestCandidate.tableIds, bestCandidate.startISO
     );
@@ -145,7 +140,7 @@ export class CreateBookingCommandHandler {
       return { ok: false, status: 409, error: "no_capacity", detail: "Concurrence conflict" };
     }
 
-    // await sleep(2000)
+    // for testing purposes -> await sleep(2000)
 
     try {
       // TODO: check this

@@ -42,6 +42,7 @@ const tables: Table[] = [
   { id: "T3", sectorId: "S1", name: "Table 3", minSize: 2, maxSize: 4, createdAt: seedNow, updatedAt: seedNow },
   { id: "T4", sectorId: "S1", name: "Table 4", minSize: 4, maxSize: 6, createdAt: seedNow, updatedAt: seedNow },
   { id: "T5", sectorId: "S1", name: "Table 5", minSize: 2, maxSize: 2, createdAt: seedNow, updatedAt: seedNow },
+  { id: "T6", sectorId: "S1", name: "Table 6", minSize: 6, maxSize: 8, createdAt: seedNow, updatedAt: seedNow },
 ];
 
 const bookings: Booking[] = [
