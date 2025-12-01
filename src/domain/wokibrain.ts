@@ -6,6 +6,8 @@ import {
   IGap,
 } from "./types";
 
+const MAX_NEARBY_TABLES =  process.env.MAX_NEARBY_TABLES ? parseInt(process.env.MAX_NEARBY_TABLES) : 2; // It has to be tables.length > MAX_NEARBY_TABLES to restrict the combos.
+
 export class WokiBrain {
   constructor(
     private readonly durationMinutes: number,
@@ -31,8 +33,6 @@ export class WokiBrain {
     }
 
     // 2-Combo tables: combination of two tables
-    const MAX_NEARBY_TABLES = 2; // It has to be tables.length > MAX_NEARBY_TABLES to restrict the combos.
-
     for (let i = 0; i < tables.length; i++) {
       for (let j  = i + 1; j <=( i + MAX_NEARBY_TABLES); j++) {
         if (j >= tables.length) break;
@@ -49,7 +49,6 @@ export class WokiBrain {
         );
 
         for (const gap of overlapGaps) {
-          if (!this.validGap(gap)) continue;
           candidates.push(this.makeCandidate([t1, t2], baseDay, gap.startMin));
         }
       }
@@ -127,7 +126,7 @@ export class WokiBrain {
       const startMin = Math.max(startA, startB);
       const endMin = Math.min(endA, endB);
   
-      if (endMin > startMin) {
+      if (endMin > startMin && (endMin - startMin) >= this.durationMinutes) {
         intersections.push({ startMin, endMin });
       }
   

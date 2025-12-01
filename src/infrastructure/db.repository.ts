@@ -38,6 +38,33 @@ export class DatabaseRepository {
     return sortBookings;
   }
 
+    public findCoincidentBookings(
+    restaurantId: string,
+    sectorId: string,
+    candidateStartISO: string,
+    candidateEndISO: string,
+    candidateTableIds: string[]
+  ): Booking[] {
+    const candidateStart = DateTime.fromISO(candidateStartISO);
+    const candidateEnd = DateTime.fromISO(candidateEndISO);
+
+    return db.bookings.filter((b) => {
+      if (
+        b.restaurantId !== restaurantId ||
+        b.sectorId !== sectorId ||
+        b.status !== BookingStatus.CONFIRMED ||
+        b.deletedAt
+      ) return false;
+
+      const bStart = DateTime.fromISO(b.start);
+      const bEnd = DateTime.fromISO(b.end);
+
+      const timeOverlap = !(candidateEnd <= bStart || candidateStart >= bEnd);
+      const tableOverlap = b.tableIds.some(t => candidateTableIds.includes(t));
+      return timeOverlap && tableOverlap;
+    });
+  }
+
   public addBooking(booking: Booking): void {
     db.bookings.push(booking);
   }
@@ -47,6 +74,7 @@ export class DatabaseRepository {
     if (!booking) return false;
 
     booking.deletedAt = DateTime.utc().toISO();
+    booking.updatedAt = DateTime.utc().toISO();
     return true;
   }
 }

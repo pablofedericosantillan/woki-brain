@@ -28,7 +28,7 @@ describe("POST /bookings", () => {
   });
 
   it("Happy combo: should find valid combination when single tables cannot fit", async () => {
-    const payload = { ...basePayload, partySize: 7 };
+    const payload = { ...basePayload, partySize: 9 };
 
     const res = await postBooking(payload, "key-combo-1");
 
@@ -87,14 +87,15 @@ describe("POST /bookings", () => {
   });
 
   // it("Concurrency: two parallel creates → one 201, one 409", async () => {
+  // // test with the sleep function
   //   const payload = {
   //     ...basePayload,
   //     windowStart: "12:00",
   //     windowEnd: "13:00",
   //   };
 
-  //   const req1 = postBooking(payload, "conc-1");
-  //   const req2 = postBooking(payload, "conc-2");
+  //   const req1 = postBooking(payload, "idemp-conc-1");
+  //   const req2 = postBooking(payload, "idemp-conc-2");
 
   //   const [res1, res2] = await Promise.all([req1, req2]);
 

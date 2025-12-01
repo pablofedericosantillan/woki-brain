@@ -14,6 +14,8 @@ export class Gap {
     let cursor = this.window.startMin;
 
     for (const interval of sorted) {
+      if (cursor >= this.window.endMin) break;
+
       if (interval.startMin > cursor) {
         gaps.push({
           startMin: cursor,
@@ -34,7 +36,7 @@ export class Gap {
       });
     }
 
-    return gaps;
+    return gaps
   }
 
   private normalizeToMinutesSorted(bookings: Booking[]) {

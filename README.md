@@ -1,24 +1,33 @@
-# WokiBrain — Booking Engine Challenge
+# WokiBrain — Booking Engine
 A booking engine that finds the best seating option for a party using single tables or table combinations.
 
+### WokiBrain selection
+To simplify seating logic and reduce layout complexity, only 2-table combinations are considered when a single table cannot accommodate the party.
 
-## Core Features
+A configuration constraint was added to limit combinations only to nearby tables, preventing unrealistic combos:
+```
+MAX_NEARBY_TABLES: Defines how many neighboring tables can be combined with the initial table.
+```
 
-- Sector-based seating with table capacity ranges
-- Gap discovery per table using `[start, end)` intervals
-- Combo gaps via intersection across multiple tables
-- Deterministic seat selection strategy (**WokiBrain**):
+#### Combos capacity:
+The capacity of a combo is computed by adding the min and max capacity of each table involved:
+Example:
+```
+T1 → max = 2, min=1
+T2 → max = 4, min=2
+T1 + T2 → max = 6, min=3 (sum of max capacities)
+```
 
-  1️-Prefer **single** table  
-  2️-Minimize **capacity waste** (`capacityMax - partySize`)  
-  3️-Earliest start time (default)
+#### Selection strategy:
 
-- Idempotent booking creation (Idempotency-Key)
-- Concurrency lock to prevent double booking
-- In-memory persistence
+  1️-Prefer **single** table.
+
+  2️-Minimize **capacity waste** (`capacityMax - partySize`).
+
+  3️-Earliest start time (default).
+
 
 ## Tech Stack
-
 | Component | Library |
 |----------|---------|
 | Runtime | Node.js (>= 20.x) |
@@ -31,26 +40,22 @@ A booking engine that finds the best seating option for a party using single tab
 
 
 ## Install dependencies
-
 ```bash
 $ npm install
 ```
 
 ## Run the project
-
 ```bash
 $ npm run start
 ```
 WokiBrain API is running on: `http://localhost:3000`
 
 ## Run tests
-
 ```bash
 $ npm run test
 ```
 
 ## API Documentation (Swagger UI)
-
 Once running, open in your browser:
 
 `http://localhost:3000/docs`
@@ -59,7 +64,7 @@ Here you can execute requests interactively.
 
 ## API Requests
 
-### Discover Seats
+### 1-Discover Seats
 ```typescript
 GET /woki/discover
 ```
@@ -95,7 +100,9 @@ Query Params example:
 }
 ```
 
-### Create Booking
+### 2-Create Booking
+Concurrency lock to prevent double booking
+
 ```typescript
 POST /woki/bookings
 ```
@@ -134,7 +141,7 @@ Body example: all required
 }
 ```
 
-### List Bookings for a Day
+### 3-List Bookings for a Day
 ```typescript
 GET /woki/bookings/day
 ```
@@ -168,7 +175,7 @@ Query Params example: all required
 }
 ```
 
-### Delete Booking (Soft Delete)
+### 4-Delete Booking (Soft Delete)
 ```typescript
 DELETE /woki/bookings/:id
 ```

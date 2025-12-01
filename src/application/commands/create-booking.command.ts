@@ -103,7 +103,7 @@ export class CreateBookingCommandHandler {
         } 
 
         const gap = new Gap(timeWindow.timeISO(),finalWindow);
-        gapsByTable.set(table.id, gap.detect(tableBookings));        
+        gapsByTable.set(table.id, gap.detect(tableBookings));
       }
 
       candidates.push(...wokiBrain.generateCandidates(timeWindow.timeISO(), tables, gapsByTable));
@@ -143,21 +143,23 @@ export class CreateBookingCommandHandler {
     // for testing purposes -> await sleep(2000)
 
     try {
-      // TODO: check this
-      // const dayBookings = databaseRepository.getBookingsByDay(restaurantId, sectorId, date); 
-      // aca podemos agregar by table?
-      // const startDt = DateTime.fromISO(bestCandidate.startISO);
-      // const endDt = DateTime.fromISO(bestCandidate.endISO);
-
-      // const collision = dayBookings.some((b) => {
-      //   const bS = DateTime.fromISO(b.start);
-      //   const bE = DateTime.fromISO(b.end);
-      //   return b.tableIds.some((t) => bestCandidate.tableIds.includes(t)) &&
-      //          !(endDt <= bS || startDt >= bE);
-      // });
-
-      // if (collision)
-      //   return { ok: false, status: 409, error: "no_capacity", detail: "Slot no longer available" };
+      const collisions = databaseRepository.findCoincidentBookings(
+        restaurantId,
+        sectorId,
+        bestCandidate.startISO,
+        bestCandidate.endISO,
+        bestCandidate.tableIds
+      );
+      
+      if (collisions.length > 0) {
+        logger.warn({ ...logBase, outcome: "no_capacity" });
+        return {
+          ok: false,
+          status: 409,
+          error: "no_capacity",
+          detail: "Slot no longer available"
+        };
+      }
 
       const now = new Date().toISOString();
 
