@@ -1,186 +1,143 @@
-# WokiBrain — Booking Engine
-A booking engine that finds the best seating option for a party using single tables or table combinations.
+# WokiBrain
 
-### WokiBrain selection
-To simplify seating logic and reduce layout complexity, only 2-table combinations are considered when a single table cannot accommodate the party.
+Booking engine API that finds the best available seating option for a restaurant party using single tables or nearby table combinations.
 
-A configuration constraint was added to limit combinations only to nearby tables, preventing unrealistic combos:
+The project focuses on booking rules, time windows, capacity matching, idempotent booking creation, and clean TypeScript application boundaries.
+
+## Features
+
+- Discover available seats for a party
+- Prefer single tables before combinations
+- Combine nearby tables when one table is not enough
+- Minimize unused capacity when selecting candidates
+- Create bookings with an `Idempotency-Key`
+- List bookings for a specific day
+- Soft delete bookings
+- Validate inputs with Zod
+- Swagger/OpenAPI documentation
+- In-memory database for simple local execution and testing
+
+## Selection Strategy
+
+WokiBrain chooses seats using these rules:
+
+1. Prefer a single table when possible.
+2. If needed, evaluate nearby two-table combinations.
+3. Minimize capacity waste: `capacityMax - partySize`.
+4. Prefer the earliest available start time.
+
+The number of nearby tables considered for combinations is controlled with:
+
+```bash
+MAX_NEARBY_TABLES=2
 ```
-MAX_NEARBY_TABLES: Defines how many neighboring tables can be combined with the initial table.
-```
-
-#### Combos capacity:
-The capacity of a combo is computed by adding the min and max capacity of each table involved:
-Example:
-```
-T1 → max = 2, min=1
-T2 → max = 4, min=2
-T1 + T2 → max = 6, min=3 (sum of max capacities)
-```
-
-#### Selection strategy:
-
-  1️-Prefer **single** table.
-
-  2️-Minimize **capacity waste** (`capacityMax - partySize`).
-
-  3️-Earliest start time (default).
-
 
 ## Tech Stack
-| Component | Library |
-|----------|---------|
-| Runtime | Node.js (>= 20.x) |
-| Framework | Express |
-| Validation | Zod |
-| Logging | Pino + pino-http |
-| API Docs | Swagger UI (OpenAPI 3.0) |
-| Testing | Jest + Supertest |
-| Database | In-memory objects |
 
+- Node.js 20+
+- TypeScript
+- Express
+- Zod
+- Luxon
+- Pino
+- Swagger UI
+- Jest + Supertest
 
-## Install dependencies
+## API Overview
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/health` | Service healthcheck |
+| `GET` | `/woki/discover` | Discover available seats |
+| `POST` | `/woki/bookings` | Create a booking |
+| `GET` | `/woki/bookings/day` | List bookings for a day |
+| `DELETE` | `/woki/bookings/:id` | Soft delete a booking |
+| `GET` | `/docs` | Swagger documentation |
+
+## Requirements
+
+- Node.js `>=20`
+- npm `>=10`
+
+## Installation
+
 ```bash
-$ npm install
+npm install
 ```
 
-## Run the project
+## Run Locally
+
 ```bash
-$ npm run start
+npm run start
 ```
-WokiBrain API is running on: `http://localhost:3000`
 
-## Run tests
+The API runs on:
+
+```text
+http://localhost:3000
+```
+
+Swagger docs are available at:
+
+```text
+http://localhost:3000/docs
+```
+
+## Environment Variables
+
 ```bash
-$ npm run test
+PORT=3000
+LOG_LEVEL=info
+MAX_NEARBY_TABLES=2
 ```
 
-## API Documentation (Swagger UI)
-Once running, open in your browser:
+## Useful Commands
 
-`http://localhost:3000/docs`
-
-Here you can execute requests interactively.
-
-## API Requests
-
-### 1-Discover Seats
-```typescript
-GET /woki/discover
+```bash
+npm run build
+npm run test
 ```
 
-Query Params example:
-```typescript
-- restaurantId: R1 (string/required)
-- sectorId: S1 (string/required)
-- date: 2025-10-22  (YYYY-MM-DD/required)
-- partySize: 5 (number/required)
-- durationMinutes: 90 (number/15×grid/required)
-- windowStart: 20:00 (HH:mm/optional)
-- windowEnd: 23:00 HH:mm/optional)
-- limit: 10 (number/optional)
+## Example Requests
+
+Discover seats:
+
+```bash
+curl "http://localhost:3000/woki/discover?restaurantId=R1&sectorId=S1&date=2025-10-22&partySize=5&durationMinutes=90&windowStart=20:00&windowEnd=23:00"
 ```
 
-✔ Success:
-```typescript
-{
- "ok": true,
- "slotMinutes": 15,
- "durationMinutes": 90,
- "candidates": [
-  {
-   "kind": "single",
-   "tableIds": ["T4"],
-   "startISO": "2025-10-22T20:00:00-03:00",
-   "endISO": "2025-10-22T21:30:00-03:00",
-   "capacityMin": 4,
-   "capacityMax": 6
-  }
- ]
-}
+Create a booking:
+
+```bash
+curl -X POST http://localhost:3000/woki/bookings \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: booking-123" \
+  -d '{
+    "restaurantId": "R1",
+    "sectorId": "S1",
+    "partySize": 5,
+    "durationMinutes": 60,
+    "date": "2025-11-30",
+    "windowStart": "12:00",
+    "windowEnd": "13:00"
+  }'
 ```
 
-### 2-Create Booking
-Concurrency lock to prevent double booking
+## Portfolio Notes
 
-```typescript
-POST /woki/bookings
-```
+This project is useful as a portfolio backend because it shows:
 
-Headers:
-```typescript
- Idempotency-Key(required): abc-123
-```
-Body example: all required
-```typescript
-{
-  "restaurantId": "R1",
-  "sectorId": "S1",
-  "partySize": 5,
-  "durationMinutes": 60,
-  "date": "2025-11-30",
-  "windowStart": "12:00",
-  "windowEnd": "13:00"
-}
-```
+- Business-rule modeling in TypeScript
+- API validation with Zod
+- Time-window handling with Luxon
+- Idempotent command handling
+- Testable Express controllers
+- Swagger API documentation
 
-✔ Success:
-```typescript
-{
- "id": "BK_87daeafb-3f85-4233-86d7-f9aebb190a21",
-  "restaurantId": "R1",
-  "sectorId": "S1",
-  "tableIds": ["T6"],
-  "partySize": 7,
-  "start": "2025-11-30T12:00:00.000-03:00",
-  "end": "2025-11-30T13:00:00.000-03:00",
-  "durationMinutes": 60,
-  "status": "CONFIRMED",
-  "createdAt": "2025-12-01T15:00:07.435Z",
-  "updatedAt": "2025-12-01T15:00:07.435Z"
-}
-```
+## Next Improvements
 
-### 3-List Bookings for a Day
-```typescript
-GET /woki/bookings/day
-```
-
-Query Params example: all required
-```typescript
-- restaurantId: R1
-- sectorId: S1
-- date: 2025-10-22
-```
-
-✔ Success:
-```typescript
-{
-  "ok": true,
-  "date": "2025-10-22",
-  "items": [
-    {
-      "id": "BK_1",
-      "restaurantId": "R1",
-      "sectorId": "S1",
-      "tableIds": ["T2"],
-      "partySize": 3,
-      "start": "2025-10-22T20:30:00-03:00",
-      "end": "2025-10-22T21:15:00-03:00",
-      "durationMinutes": 45,
-      "status": "CONFIRMED",
-      . . . 
-    }
-  ]
-}
-```
-
-### 4-Delete Booking (Soft Delete)
-```typescript
-DELETE /woki/bookings/:id
-```
-
-Path Params example: required
-```typescript
-- id:  BK_001
-```
+- Add persistent storage
+- Add authentication for admin endpoints
+- Add Docker support
+- Add GitHub Actions for build and tests
+- Add more edge-case tests for booking conflicts and table combinations
